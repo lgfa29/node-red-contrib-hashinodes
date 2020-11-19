@@ -1,21 +1,79 @@
 <script type="text/javascript">
-  RED.nodes.registerType("nomad-job", {
+  RED.nodes.registerType("nomad-client", {
+    category: "config",
+    defaults: {
+      address: { value: "http://localhost:4646" },
+      namespace: { value: "" },
+      region: { value: "" },
+    },
+    label: function () {
+      let label = this.address;
+      if (this.namespace) {
+        label += "@" + this.namespace;
+      }
+      if (this.region) {
+        label += " [" + this.region + "]";
+      }
+      return label;
+    },
+  });
+</script>
+
+<script type="text/html" data-template-name="nomad-client">
+  <div class="form-row">
+    <label for="node-config-input-address"
+      ><i class="fa fa-plug"></i> Address</label
+    >
+    <input
+      type="text"
+      id="node-config-input-address"
+      placeholder="http://localhost:4646"
+    />
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-namespace"
+      ><i class="fa fa-sitemap"></i> Namespace</label
+    >
+    <input type="text" id="node-config-input-namespace" placeholder="default" />
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-region"
+      ><i class="fa fa-globe"></i> Region</label
+    >
+    <input type="text" id="node-config-input-region" placeholder="global" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="nomad-client">
+  <p>
+    A simple node that converts the message payloads into all lower-case
+    characters
+  </p>
+</script>
+
+<script type="text/javascript">
+  RED.nodes.registerType("nomad-get-job", {
     category: "hashicorp",
     color: "#00BC7F",
     defaults: {
       name: { value: "" },
-      jobId: { value: "" },
+      jobId: { value: "", required: true },
+      client: { value: "", type: "nomad-client" },
     },
     inputs: 0,
     outputs: 1,
     icon: "nomad.svg",
     label: function () {
-      return this.name || "nomad-job";
+      return this.name || this.jobId || "nomad job";
     },
+    labelStyle: function () {
+      return this.jobId ? "node_label_italic" : "";
+    },
+    paletteLabel: "nomad job",
   });
 </script>
 
-<script type="text/html" data-template-name="nomad-job">
+<script type="text/html" data-template-name="nomad-get-job">
   <div class="form-row">
     <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
     <input type="text" id="node-input-name" placeholder="Name" />
@@ -24,9 +82,13 @@
     <label for="node-input-jobId"><i class="fa fa-tag"></i> Job ID</label>
     <input type="text" id="node-input-jobId" placeholder="example" />
   </div>
+  <div class="form-row">
+    <label for="node-input-client"><i class="fa fa-plug"></i> Client</label>
+    <input type="text" id="node-input-client" />
+  </div>
 </script>
 
-<script type="text/html" data-help-name="nomad-job">
+<script type="text/html" data-help-name="nomad-get-job">
   <p>
     A simple node that converts the message payloads into all lower-case
     characters
