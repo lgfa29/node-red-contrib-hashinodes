@@ -1,0 +1,33 @@
+{
+  "name": "node-red-contrib-hashicorp",
+  "version": "0.0.1",
+  "description": "A set of Node-RED nodes to interact with HashiCorp products",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lgfa29/node-red-contrib-hashicorp.git"
+  },
+  "author": "",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/lgfa29/node-red-contrib-hashicorp/issues"
+  },
+  "homepage": "https://github.com/lgfa29/node-red-contrib-hashicorp#readme",
+  "keywords": [
+    "node-red"
+  ],
+  "node-red": {
+    "nodes": {
+      "nomad": "nomad/nomad.js"
+    }
+  },
+  "dependencies": {
+    "superagent": "^6.1.0"
+  },
+  "devDependencies": {
+    "prettier": "2.1.2"
+  }
+}

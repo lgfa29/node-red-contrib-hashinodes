@@ -1,0 +1,34 @@
+<script type="text/javascript">
+  RED.nodes.registerType("nomad-job", {
+    category: "hashicorp",
+    color: "#00BC7F",
+    defaults: {
+      name: { value: "" },
+      jobId: { value: "" },
+    },
+    inputs: 0,
+    outputs: 1,
+    icon: "nomad.svg",
+    label: function () {
+      return this.name || "nomad-job";
+    },
+  });
+</script>
+
+<script type="text/html" data-template-name="nomad-job">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-jobId"><i class="fa fa-tag"></i> Job ID</label>
+    <input type="text" id="node-input-jobId" placeholder="example" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="nomad-job">
+  <p>
+    A simple node that converts the message payloads into all lower-case
+    characters
+  </p>
+</script>
