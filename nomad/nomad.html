@@ -108,7 +108,7 @@
     outputs: 1,
     icon: "nomad.svg",
     label: function () {
-      return this.name || this.jobId || "nomad dispatch job";
+      return this.name || "dispatch " + this.jobId || "nomad dispatch job";
     },
     labelStyle: function () {
       return this.jobId ? "node_label_italic" : "";
