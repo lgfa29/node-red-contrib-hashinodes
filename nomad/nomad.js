@@ -105,11 +105,13 @@ module.exports = function (RED) {
     this.sub = null;
     this.reconnectInterval = null;
 
-    try {
-      this.topics = JSON.parse(config.topics);
-    } catch (err) {
-      this.error(err, "failed to parse topics");
-      return;
+    if (config.topics) {
+      try {
+        this.topics = JSON.parse(config.topics);
+      } catch (err) {
+        this.error(err, "failed to parse topics");
+        return;
+      }
     }
 
     this.setConnected = function () {
@@ -130,22 +132,36 @@ module.exports = function (RED) {
 
     this.closeStream = function () {
       if (node.sub) {
+        node.sub.removeAllListeners();
         node.sub = null;
       }
     };
 
-    this.sub = this.nomad.client.events.stream({ topics: this.topics });
-    this.sub.on("data", this.handleData);
-    this.sub.on("error", this.handleError);
-    this.sub.on("connected", this.setConnected);
-    this.sub.on("disconnected", this.setDisconnected);
+    this.startStream = function () {
+      this.setDisconnected();
+
+      this.sub = this.nomad.client.events.stream({ topics: this.topics });
+      this.sub.on("data", this.handleData);
+      this.sub.on("error", this.handleError);
+      this.sub.on("connected", this.setConnected);
+      this.sub.on("disconnected", this.setDisconnected);
+    };
+
+    this.on("input", function (msg, send, done) {
+      node.closeStream();
+      node.topics = msg.payload.topics;
+      node.startStream();
+      done();
+    });
 
     this.on("close", function (removed, done) {
       node.closeStream();
       done();
     });
 
-    this.setDisconnected();
+    if (config.topics) {
+      this.startStream();
+    }
   }
   RED.nodes.registerType("nomad-event-stream", NomadEventStream);
 };
