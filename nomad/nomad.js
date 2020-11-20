@@ -18,12 +18,11 @@ module.exports = function (RED) {
 
   function NomadGetJobNode(config) {
     RED.nodes.createNode(this, config);
+    const node = this;
 
     this.nomad = RED.nodes.getNode(config.client);
     this.jobId = config.jobId;
-    let sub = null;
-
-    const node = this;
+    this.sub = null;
 
     this.handleData = function (data) {
       let color = "grey";
@@ -55,6 +54,58 @@ module.exports = function (RED) {
     this.sub.on("data", this.handleData);
     this.sub.on("error", this.handleError);
   }
-
   RED.nodes.registerType("nomad-get-job", NomadGetJobNode);
+
+  function NomadEventStream(config) {
+    RED.nodes.createNode(this, config);
+    const node = this;
+
+    this.nomad = RED.nodes.getNode(config.client);
+    this.topics = [];
+    this.sub = null;
+    this.reconnectInterval = null;
+
+    try {
+      this.topics = JSON.parse(config.topics);
+    } catch (err) {
+      this.error(err, "failed to parse topics");
+      return;
+    }
+
+    this.setConnected = function () {
+      node.status({ fill: "green", shape: "dot", text: "connected" });
+    };
+
+    this.setDisconnected = function () {
+      node.status({ fill: "red", shape: "dot", text: "disconnected" });
+    };
+
+    this.handleData = function (data) {
+      node.send({ payload: data });
+    };
+
+    this.handleError = function (err) {
+      node.error(err, "failed to get event stream");
+    };
+
+    this.closeStream = function () {
+      if (node.sub) {
+        node.sub = null;
+      }
+    };
+
+    this.sub = this.nomad.client.events.stream({ topics: this.topics });
+    this.sub.on("data", this.handleData);
+    this.sub.on("error", this.handleError);
+    this.sub.on("connected", this.setConnected);
+    this.sub.on("disconnected", this.setDisconnected);
+
+    this.on("close", function (removed, done) {
+      node.closeStream();
+      done();
+    });
+
+    this.setDisconnected();
+  }
+  RED.nodes.registerType("nomad-event-stream", NomadEventStream);
 };
