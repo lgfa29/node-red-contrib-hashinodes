@@ -96,6 +96,48 @@ module.exports = function (RED) {
   }
   RED.nodes.registerType("nomad-dispatch-job", NomadDispatchJobNode);
 
+  function NomadAllocLogsNode(config) {
+    RED.nodes.createNode(this, config);
+    const node = this;
+
+    this.nomad = RED.nodes.getNode(config.client);
+
+    this.on("input", function (msg, send, done) {
+      if (!msg.payload.allocId) {
+        done("message missing payload.allocId");
+        return;
+      }
+
+      const allocId = msg.payload.allocId;
+      const opts = msg.payload.options;
+
+      this.nomad.client.clients
+        .logs(allocId, opts)
+        .then((data) => {
+          const buff = Buffer.from(data.body.Data, "base64");
+          msg.payload = buff.toString("utf-8");
+
+          if (send) {
+            send(msg);
+          } else {
+            node.send(msg);
+          }
+
+          if (done) {
+            done();
+          }
+        })
+        .catch((err) => {
+          if (done) {
+            done(err);
+          } else {
+            node.error(err, msg);
+          }
+        });
+    });
+  }
+  RED.nodes.registerType("nomad-alloc-logs", NomadAllocLogsNode);
+
   function NomadEventStream(config) {
     RED.nodes.createNode(this, config);
     const node = this;
