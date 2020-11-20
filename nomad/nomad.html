@@ -96,6 +96,50 @@
 </script>
 
 <script type="text/javascript">
+  RED.nodes.registerType("nomad-dispatch-job", {
+    category: "hashicorp",
+    color: "#00BC7F",
+    defaults: {
+      name: { value: "" },
+      jobId: { value: "", required: true },
+      client: { value: "", type: "nomad-client" },
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "nomad.svg",
+    label: function () {
+      return this.name || this.jobId || "nomad dispatch job";
+    },
+    labelStyle: function () {
+      return this.jobId ? "node_label_italic" : "";
+    },
+    paletteLabel: "nomad dispatch job",
+  });
+</script>
+
+<script type="text/html" data-template-name="nomad-dispatch-job">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-jobId"><i class="fa fa-tag"></i> Job ID</label>
+    <input type="text" id="node-input-jobId" placeholder="example" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-client"><i class="fa fa-plug"></i> Client</label>
+    <input type="text" id="node-input-client" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="nomad-dispatch-job">
+  <p>
+    A simple node that converts the message payloads into all lower-case
+    characters
+  </p>
+</script>
+
+<script type="text/javascript">
   RED.nodes.registerType("nomad-event-stream", {
     category: "hashicorp",
     color: "#00BC7F",

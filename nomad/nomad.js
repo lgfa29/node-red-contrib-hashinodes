@@ -56,6 +56,46 @@ module.exports = function (RED) {
   }
   RED.nodes.registerType("nomad-get-job", NomadGetJobNode);
 
+  function NomadDispatchJobNode(config) {
+    RED.nodes.createNode(this, config);
+    const node = this;
+
+    this.nomad = RED.nodes.getNode(config.client);
+    this.jobId = config.jobId;
+
+    this.on("input", function (msg, send, done) {
+      const jobId = msg.payload.jobId || this.jobId;
+      const opts = {
+        payload: msg.payload.payload,
+        meta: msg.payload.meta,
+      };
+
+      this.nomad.client.jobs
+        .dispatch(jobId, opts)
+        .then((data) => {
+          msg.payload = data.body;
+
+          if (send) {
+            send(msg);
+          } else {
+            node.send(msg);
+          }
+
+          if (done) {
+            done();
+          }
+        })
+        .catch((err) => {
+          if (done) {
+            done(err);
+          } else {
+            node.error(err, msg);
+          }
+        });
+    });
+  }
+  RED.nodes.registerType("nomad-dispatch-job", NomadDispatchJobNode);
+
   function NomadEventStream(config) {
     RED.nodes.createNode(this, config);
     const node = this;
