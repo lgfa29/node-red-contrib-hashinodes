@@ -22,6 +22,7 @@ module.exports = function (RED) {
 
     this.nomad = RED.nodes.getNode(config.client);
     this.jobId = config.jobId;
+    this.blocking = config.blocking;
     this.sub = null;
 
     this.handleData = function (data) {
@@ -42,17 +43,45 @@ module.exports = function (RED) {
       node.error(err, "failed to get job");
     };
 
+    this.on("input", function (msg, send, done) {
+      this.nomad.client.jobs
+        .get(msg.payload.jobId || node.jobId)
+        .then((data) => {
+          msg.payload = data.body;
+
+          if (send) {
+            send(msg);
+          } else {
+            node.send(msg);
+          }
+
+          if (done) {
+            done();
+          }
+        })
+        .catch((err) => {
+          if (done) {
+            done(err);
+          } else {
+            node.error(err, msg);
+          }
+        });
+    });
+
     this.on("close", function (removed, done) {
       if (node.sub) {
         node.sub.removeAllListeners();
         node.sub = null;
       }
+      node.status({});
       done();
     });
 
-    this.sub = this.nomad.client.jobs.get(config.jobId, { blocking: true });
-    this.sub.on("data", this.handleData);
-    this.sub.on("error", this.handleError);
+    if (this.blocking) {
+      this.sub = this.nomad.client.jobs.get(config.jobId, { blocking: true });
+      this.sub.on("data", this.handleData);
+      this.sub.on("error", this.handleError);
+    }
   }
   RED.nodes.registerType("nomad-get-job", NomadGetJobNode);
 
@@ -199,14 +228,6 @@ module.exports = function (RED) {
       node.status({ fill: "red", shape: "dot", text: "disconnected" });
     };
 
-    this.handleData = function (data) {
-      node.send({ payload: data });
-    };
-
-    this.handleError = function (err) {
-      node.error(err, "failed to get event stream");
-    };
-
     this.closeStream = function () {
       if (node.sub) {
         node.sub.removeAllListeners();
@@ -214,20 +235,27 @@ module.exports = function (RED) {
       }
     };
 
-    this.startStream = function () {
+    this.startStream = function (msg = {}) {
       this.setDisconnected();
 
       this.sub = this.nomad.client.events.stream({ topics: this.topics });
-      this.sub.on("data", this.handleData);
-      this.sub.on("error", this.handleError);
       this.sub.on("connected", this.setConnected);
       this.sub.on("disconnected", this.setDisconnected);
+
+      this.sub.on("data", (data) => {
+        msg.payload = data;
+        node.send(msg);
+      });
+
+      this.sub.on("error", (err) => {
+        node.error(err, msg);
+      });
     };
 
     this.on("input", function (msg, send, done) {
       node.closeStream();
       node.topics = msg.payload.topics;
-      node.startStream();
+      node.startStream(msg);
       done();
     });
 

@@ -56,9 +56,10 @@
     defaults: {
       name: { value: "" },
       jobId: { value: "", required: true },
+      blocking: { value: false, required: true },
       client: { value: "", type: "nomad-client" },
     },
-    inputs: 0,
+    inputs: 1,
     outputs: 1,
     icon: "nomad.svg",
     label: function () {
@@ -78,6 +79,12 @@
   <div class="form-row">
     <label for="node-input-jobId"><i class="fa fa-tag"></i> Job ID</label>
     <input type="text" id="node-input-jobId" placeholder="example" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-blocking"
+      ><i class="fa fa-tag"></i> Use blocking query</label
+    >
+    <input type="checkbox" id="node-input-blocking" />
   </div>
   <div class="form-row">
     <label for="node-input-client"><i class="fa fa-plug"></i> Client</label>
